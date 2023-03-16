@@ -1,7 +1,46 @@
 # Creating command line options
 import re, argparse
+import plistlib
 
-
+# find duplicate values
+def findDuplicates(fileName):
+    print('Finding duplicates song in %s...' % fileName)
+    # Read in the playlist
+    # readPlist method takes a p-list file as input and 
+    # return top level dictionary
+    plist = plistlib.readPlist(fileName)
+    tracks = plist['Tracks']
+    # create a track name dictionary
+    trackNames = {}
+    
+    # loop through the tracks
+    for trackId, track in tracks.items():
+        try:
+            name = track['Name']
+            duration = track['Total Time']
+            # look for existing entries
+            if name in trackNames:
+                # if a name and duration match, increment the count
+                count = trackNames[name][1]
+                trackNames[name] = (duration, count + 1)
+            else:
+                # add the new entry to the list
+                trackNames[name] = (duration, 1)
+        except:
+            # ignore 
+            pass
+    # store duplicates as (name, count) tuples
+    dups = []
+    for k, v in trackNames.items():
+        if v[1] > 1:
+            dups.append((v[1],k))
+    # save to a file
+    if len(dups) > 0:
+        print("Found %d duplicates. Track names saved to dups.txt" % len(dups))
+    f = open("dups.txt", "w")
+    for val in dups:
+        f.write("[%d] %s\n" % (val[0], val[1]))
+    f.close()    
 
 
 def main():
@@ -17,7 +56,7 @@ def main():
     # plFiles, PlFile, PlFiled
     parser.add_argument('--common', nargs='*', dest='plFiles', required=False)
     parser.add_argument('--stats', dest='plFile', required=False)
-    parse.add_argument('--dup', dest='plFileD', required=False)
+    parser.add_argument('--dup', dest='plFileD', required=False)
     
     # parse args
     args = parser.parse_args()
@@ -29,7 +68,7 @@ def main():
         # plot the tracks
         plotStats(args.plFile)
     elif args.plFileD:
-        findDuplicates(args.plFiled)
+        findDuplicates(args.plFileD)
     else:
         # if the user did not type any arguments
         print("These are not the track you are looking for")
