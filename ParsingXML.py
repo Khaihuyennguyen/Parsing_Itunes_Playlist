@@ -42,6 +42,42 @@ def findDuplicates(fileName):
         f.write("[%d] %s\n" % (val[0], val[1]))
     f.close()    
 
+# Find tracks common across multiple playlist
+
+def findCommonTracks(fileNames):
+    # a list of sets of tracks name
+    trackNameSets = []
+    for fileName in fileNames:
+        # We create a new track
+        trackNames = set()
+        # read in the playlist
+        plist = plistlib.readPlist(fileName)
+        # get the track
+        tracks = plist['Tracks']
+        # loop through the tracks
+        for trackId, track in tracks.items():
+            try:
+                # adding the trackname to a set
+                trackNames.add(track['Name'])
+            except:
+                # ignore
+                pass
+        # add to list
+        trackNameSets.append(trackNames)
+    # get the set of common tracks
+    commonTracks = set.intersection)*trackNameSets)
+    
+    # write to file
+    if len(commonTracks) > 0:
+        f =open("common.txt", "w")
+        for val in commonTracks:
+            s = "%s\n" % val
+            f.write(s.encode("UTF-8"))
+        f.close()
+        print("%d common tracks found. "
+              "Track names written to common.txt." % len(commonTracks))
+    else:
+        print("Sorry, no tracks")
 
 def main():
     # We create the parser
