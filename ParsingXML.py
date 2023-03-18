@@ -1,6 +1,9 @@
 # Creating command line options
 import re, argparse
 import plistlib
+from matplotlib import pyplot
+import sys
+import numpy as np
 
 # find duplicate values
 def findDuplicates(fileName):
@@ -8,7 +11,8 @@ def findDuplicates(fileName):
     # Read in the playlist
     # readPlist method takes a p-list file as input and 
     # return top level dictionary
-    plist = plistlib.readPlist(fileName)
+    with open(fileName, 'rb') as f:
+        plist = plistlib.load(f)
     tracks = plist['Tracks']
     # create a track name dictionary
     trackNames = {}
@@ -51,7 +55,9 @@ def findCommonTracks(fileNames):
         # We create a new track
         trackNames = set()
         # read in the playlist
-        plist = plistlib.readPlist(fileName)
+        with open(fileName, 'rb') as f:
+            plist = plistlib.load(f)
+
         # get the track
         tracks = plist['Tracks']
         # loop through the tracks
@@ -78,7 +84,52 @@ def findCommonTracks(fileNames):
               "Track names written to common.txt." % len(commonTracks))
     else:
         print("Sorry, no tracks")
+# Collecting Statistics
+def plotStats(fileName):
+    # read in the playlist
+    with open(fileName, 'rb') as f:
+        plist = plistlib.load(f)
 
+    
+    # Getting tracks from the list
+    tracks = plist['Tracks']
+    # Creating lists of song rating and track durations
+    ratings  = []
+    durations = []
+    # iterrate through the tracks
+    for trackId, track in tracks.items():
+        try:
+            ratings.append(track['Album Rating'])
+            durations.append(track['Total Time'])
+        except:
+            # ignore the failing cases
+            pass
+    # ensure that valid data was collected
+    if ratings == [] or durations ==[]:
+        print("NO valid album rating or time data in %s" % fileName)
+        return
+    # plotting some data
+    # scatter plot
+    x = np.array(durations, np.int32) 
+    # then, convert x into minutes
+    x = x/60000.0
+    y = np.array(ratings, np.int32)
+    
+    pyplot.subplot(2, 1, 1)
+    pyplot.plot(x, y, 'o')
+    pyplot.axis([0, 1.05*np.max(x), -1, 110])
+    pyplot.xlabel('Track duration')
+    pyplot.ylabel('Track ratin')
+
+    
+    # plot histogram
+    pyplot.subplot(2, 1, 2)
+    pyplot.hist(x, bins=20)
+    pyplot.xlabel('Track location')
+    pyplot.ylabel('Count')
+    
+    # show plot
+    pyplot.show()
 def main():
     # We create the parser
     descStr="""
